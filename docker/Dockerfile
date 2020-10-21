@@ -37,3 +37,16 @@ RUN sudo apt-get update && sudo apt-get install -y \
       ros-${ROS_DISTRO}-demo-nodes-py \
       ros-${ROS_DISTRO}-turtlesim && \
     sudo rm -rf /var/lib/apt/lists/*
+
+###
+##  Container with ros tools such as introspection, record, and replay
+###
+FROM base as tools
+
+# install rqt and rosbag packages
+RUN sudo apt-get update && sudo apt-get install -y \
+      "ros-${ROS_DISTRO}-rqt*" \
+      ros-${ROS_DISTRO}-ros2bag \
+      ros-${ROS_DISTRO}-rosbag2 \
+      ros-${ROS_DISTRO}-rosbag2-transport && \
+    sudo rm -rf /var/lib/apt/lists/*
