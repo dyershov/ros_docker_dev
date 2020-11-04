@@ -12,12 +12,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 # librobotcontrol version
 ARG LIBROBOTCONTROL_RELEASE=1.0.5
 
+# upgrade?
+RUN apt-get update && apt-get upgrade -y
+
 # install base packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
       sudo \
       zsh \
       wget \
       curl \
+      less \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -67,18 +71,23 @@ WORKDIR ${home}
 
 CMD [ "/bin/zsh" ]
 
-
 ###
-##  Container with ros examples
+##  Joystic teleop container
 ###
-FROM base as examples
+FROM base as joy
 
-# install demo ros packages
+ARG user=yershov
+ARG home=/home/${user}
+
+# install rqt and rosbag packages
 RUN sudo apt-get update && sudo apt-get install -y \
-      ros-${ROS_DISTRO}-demo-nodes-cpp \
-      ros-${ROS_DISTRO}-demo-nodes-py \
-      ros-${ROS_DISTRO}-turtlesim && \
+    ros-${ROS_DISTRO}-joy \
+    ros-${ROS_DISTRO}-teleop-twist-joy && \
     sudo rm -rf /var/lib/apt/lists/*
+
+COPY home/config/teleop_twist/xbox_joy.yaml ${home}/config/teleop_twist/xbox_joy.yaml
+
+CMD [ "/bin/zsh" ]
 
 ###
 ##  Container with ros tools such as introspection, record, and replay
@@ -91,4 +100,16 @@ RUN sudo apt-get update && sudo apt-get install -y \
       ros-${ROS_DISTRO}-ros2bag \
       ros-${ROS_DISTRO}-rosbag2 \
       ros-${ROS_DISTRO}-rosbag2-transport && \
+    sudo rm -rf /var/lib/apt/lists/*
+
+###
+##  Container with ros examples
+###
+FROM base as examples
+
+# install demo ros packages
+RUN sudo apt-get update && sudo apt-get install -y \
+      ros-${ROS_DISTRO}-demo-nodes-cpp \
+      ros-${ROS_DISTRO}-demo-nodes-py \
+      ros-${ROS_DISTRO}-turtlesim && \
     sudo rm -rf /var/lib/apt/lists/*
