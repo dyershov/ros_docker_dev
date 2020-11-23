@@ -80,10 +80,11 @@ ARG user=yershov
 ARG home=/home/${user}
 
 # install rqt and rosbag packages
-RUN sudo apt-get update && sudo apt-get install -y \
-    ros-${ROS_DISTRO}-joy \
-    ros-${ROS_DISTRO}-teleop-twist-joy && \
-    sudo rm -rf /var/lib/apt/lists/*
+RUN sudo apt-get update \
+    && sudo apt-get install -y \
+       	    	    	    ros-${ROS_DISTRO}-joy \
+		    	    ros-${ROS_DISTRO}-teleop-twist-joy \
+    && sudo rm -rf /var/lib/apt/lists/*
 
 COPY home/config/teleop_twist/xbox_joy.yaml ${home}/config/teleop_twist/xbox_joy.yaml
 
@@ -94,13 +95,45 @@ CMD [ "/bin/zsh" ]
 ###
 FROM base as tools
 
-# install rqt and rosbag packages
+#####  Copied from nVidia GL container recepe
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+       	 libxau6 \
+	 libxdmcp6 \
+	 libxcb1 \
+	 libxext6 \
+	 libx11-6 \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES \
+    ${NVIDIA_VISIBLE_DEVICES:-all}
+ENV NVIDIA_DRIVER_CAPABILITIES \
+    ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics,compat32,utility
+
+RUN sudo sh -c "echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf ; \
+    	        echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf"
+
+# Required for non-glvnd setups.
+ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu:/usr/lib/i386-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+      libglvnd0 \
+      libgl1 \
+      libglx0 \
+      libegl1 \
+      libgles2 \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+COPY 10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+
+# install ROS tools packages
 RUN sudo apt-get update && sudo apt-get install -y \
       "ros-${ROS_DISTRO}-rqt*" \
       ros-${ROS_DISTRO}-ros2bag \
       ros-${ROS_DISTRO}-rosbag2 \
-      ros-${ROS_DISTRO}-rosbag2-transport && \
-    sudo rm -rf /var/lib/apt/lists/*
+      ros-${ROS_DISTRO}-rosbag2-transport \
+      ros-${ROS_DISTRO}-rviz2 \
+    && sudo rm -rf /var/lib/apt/lists/*
 
 ###
 ##  Container with ros examples
@@ -111,5 +144,5 @@ FROM base as examples
 RUN sudo apt-get update && sudo apt-get install -y \
       ros-${ROS_DISTRO}-demo-nodes-cpp \
       ros-${ROS_DISTRO}-demo-nodes-py \
-      ros-${ROS_DISTRO}-turtlesim && \
-    sudo rm -rf /var/lib/apt/lists/*
+      ros-${ROS_DISTRO}-turtlesim \
+    && sudo rm -rf /var/lib/apt/lists/*
