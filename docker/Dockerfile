@@ -135,6 +135,27 @@ RUN sudo apt-get update && sudo apt-get install -y \
       ros-${ROS_DISTRO}-rviz2 \
     && sudo rm -rf /var/lib/apt/lists/*
 
+
+###
+##  Container with ros camera
+###
+FROM base as camera
+
+ARG user=yershov
+ARG home=/home/${user}
+
+RUN sudo groupmod -g 986 video
+RUN sudo usermod -a -G video yershov # ???
+
+COPY home/install_ros_packages.bash ${home}/
+
+RUN bash ${home}/install_ros_packages.bash -g https://github.com/klintan/ros2_usb_camera.git -p usb_camera_driver -v
+
+# install demo ros packages
+RUN sudo apt-get update && sudo apt-get install -y \
+      ros-${ROS_DISTRO}-v4l2-camera \
+    && sudo rm -rf /var/lib/apt/lists/*
+
 ###
 ##  Container with ros examples
 ###
