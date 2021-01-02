@@ -64,7 +64,8 @@ RUN wget https://github.com/beagleboard/librobotcontrol/archive/V${LIBROBOTCONTR
     && make \
     && sudo make install \
     && cd .. \
-    && rm -r librobotcontrol-${LIBROBOTCONTROL_RELEASE}
+    && rm -r librobotcontrol-${LIBROBOTCONTROL_RELEASE} \
+    && rm V${LIBROBOTCONTROL_RELEASE}.tar.gz
 
 USER ${user}
 WORKDIR ${home}
@@ -150,6 +151,10 @@ RUN sudo usermod -a -G video yershov # ???
 COPY home/install_ros_packages.bash ${home}/
 
 RUN bash ${home}/install_ros_packages.bash -g https://github.com/klintan/ros2_usb_camera.git -p usb_camera_driver -v
+
+RUN sudo apt-get update && sudo apt-get install -y \
+      ros-${ROS_DISTRO}-image-transport-plugins \
+    && sudo rm -rf /var/lib/apt/lists/*
 
 # install demo ros packages
 RUN sudo apt-get update && sudo apt-get install -y \
